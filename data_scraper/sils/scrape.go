@@ -1,12 +1,13 @@
 package sils
 
 import (
-	"log"
 	"strings"
 
 	"context"
 
 	"github.com/PuerkitoBio/goquery"
+	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/urlfetch"
 )
 
 const (
@@ -32,18 +33,24 @@ type Classes struct {
 func GetData(ctx context.Context) *Classes {
 	urls := FromFile(filePath)
 	cl := &Classes{}
-	for _, v := range urls {
-		cl.Datas = append(cl.Datas, Scrape(ctx, v))
+	for _, url := range urls {
+		cl.Datas = append(cl.Datas, Scrape(ctx, url))
 	}
 
 	return cl
 }
 
 func Scrape(ctx context.Context, url string) *Class {
-	doc, err := goquery.NewDocument(url)
+	client := urlfetch.Client(ctx)
+	resp, err := client.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		log.Infof(ctx, "could not get the url:", err)
 	}
+	doc, err := goquery.NewDocumentFromResponse(resp)
+	if err != nil {
+		log.Infof(ctx, "could not create a new doc:", err)
+	}
+
 	var data []string
 	doc.Find("div.ctable-main > table > tbody > tr > td").Each(func(i int, s *goquery.Selection) {
 		s.Each(func(i int, s *goquery.Selection) {

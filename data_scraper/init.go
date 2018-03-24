@@ -10,6 +10,7 @@ import (
 
 func init() {
 	http.HandleFunc("/api/sils", getSILS)
+	http.Handle("/favicon.ico", http.NotFoundHandler())
 }
 
 func getSILS(w http.ResponseWriter, r *http.Request) {
