@@ -3,15 +3,11 @@ package sils
 import (
 	"strings"
 
-	"context"
+	"golang.org/x/net/context"
 
 	"github.com/PuerkitoBio/goquery"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
-)
-
-const (
-	filePath = "syllabus_url.txt"
 )
 
 type Class struct {

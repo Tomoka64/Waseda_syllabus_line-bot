@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+const (
+	filePath = "../sils/syllabus_url.txt"
+)
+
 func FromFile(filePath string) []string {
 	f, err := os.Open(filePath)
 	if err != nil {

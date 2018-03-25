@@ -1,18 +1,24 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
-	sils "github.com/Tomoka64/syllabus_line_bot/data_scraper/sils"
+	"github.com/Tomoka64/syllabus_line_bot/data_scraper/sils"
+
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 )
 
 func init() {
+	http.HandleFunc("/", hello)
 	http.HandleFunc("/api/sils", getSILS)
 	http.Handle("/favicon.ico", http.NotFoundHandler())
 }
 
+func hello(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "hello world")
+}
 func getSILS(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	key := datastore.NewIncompleteKey(ctx, "sils", nil)
