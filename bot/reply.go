@@ -1,8 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
+
+	"golang.org/x/net/context"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 )

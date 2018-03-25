@@ -13,6 +13,10 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot/httphandler"
 )
 
+type mybot struct {
+	client *linebot.Client
+}
+
 func init() {
 	handler, err := httphandler.New(
 		os.Getenv("CHANNEL_SECRET"),
@@ -35,8 +39,4 @@ func init() {
 		m.EventRouter(events, ctx)
 	})
 	http.Handle("/callback", handler)
-}
-
-type mybot struct {
-	client *linebot.Client
 }
