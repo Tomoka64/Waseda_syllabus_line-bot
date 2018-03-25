@@ -21,7 +21,7 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 func getSILS(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	key := datastore.NewIncompleteKey(ctx, "sils", nil)
+	key := datastore.NewIncompleteKey(ctx, "SILS", nil)
 	silsData := sils.GetData(ctx)
 	for _, data := range silsData.Datas {
 		if _, err := datastore.Put(ctx, key, data); err != nil {

@@ -54,6 +54,9 @@ func Scrape(ctx context.Context, url string) *Class {
 			data = append(data, ss)
 		})
 	})
+	if len(data) < 8 {
+		return &Class{}
+	}
 	schedule := strings.Split(data[4], "semester")
 	term := schedule[0]
 	dayAndperiod := strings.Split(schedule[1], ".")
