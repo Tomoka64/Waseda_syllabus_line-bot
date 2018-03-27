@@ -3,7 +3,7 @@ package main
 import (
 	"golang.org/x/net/context"
 
-	"github.com/Tomoka64/syllabus_line_bot/data_scraper/sils"
+	"github.com/Tomoka64/Waseda_syllabus_line-bot/data_scraper/sils"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
@@ -44,16 +44,29 @@ func (b *mybot) Kensaku(ctx context.Context, replyToken, day, times string) {
 }
 
 func ResultTemplate(datas []*sils.Class) []*linebot.CarouselColumn {
-
-	templates := make([]*linebot.CarouselColumn, len(datas[:10]))
-
-	for i, data := range datas[:10] {
-		url := linebot.NewURITemplateAction(data.CourseTitle[:15]+"...", data.URL)
-		templates[i] = linebot.NewCarouselColumn(
-			"", data.Day+data.Period, data.Instructor,
-			url,
-		)
+	x := len(datas)
+	switch {
+	case x < 10:
+		templates := make([]*linebot.CarouselColumn, x)
+		for i, data := range datas {
+			url := linebot.NewURITemplateAction(data.CourseTitle[:17]+"...", data.URL)
+			templates[i] = linebot.NewCarouselColumn(
+				"", data.Day+data.Period, data.Instructor,
+				url,
+			)
+			return templates
+		}
+	case x >= 10:
+		templates := make([]*linebot.CarouselColumn, len(datas[:10]))
+		for i, data := range datas[:10] {
+			url := linebot.NewURITemplateAction(data.CourseTitle[:17]+"...", data.URL)
+			templates[i] = linebot.NewCarouselColumn(
+				"", data.Day+data.Period+"\t"+data.Category, data.Instructor,
+				url,
+			)
+		}
+		return templates
 	}
 
-	return templates
+	return nil
 }

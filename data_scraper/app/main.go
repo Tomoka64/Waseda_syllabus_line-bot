@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Tomoka64/syllabus_line_bot/data_scraper/sils"
+	"github.com/Tomoka64/Waseda_syllabus_line-bot/data_scraper/sils"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"

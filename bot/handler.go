@@ -20,8 +20,7 @@ func (b *mybot) EventRouter(eve []*linebot.Event, ctx context.Context) {
 			}
 
 		case linebot.EventTypePostback:
-			//r.handledata(event.Postback.Data, event.ReplyToken, event.Source.UserID)
-			b.searchTemplate(event.Postback.Data, event.ReplyToken, ctx)
+			b.serveTemplate(event.Postback.Data, event.ReplyToken, ctx)
 		}
 
 	}
@@ -30,17 +29,20 @@ func (b *mybot) EventRouter(eve []*linebot.Event, ctx context.Context) {
 func (b *mybot) handleText(message *linebot.TextMessage, replyToken string, ctx context.Context) {
 	switch message.Text {
 	case "あ":
-		err := b.ReplyTemplate(replyToken, b.SendSilsTemplate("検索方法"), ctx)
+		err := b.ReplyTemplate(replyToken, b.TemplateHandler("検索方法"), ctx)
 		if err != nil {
 			log.Infof(ctx, "could not send the template あ:", err)
 		}
 	case "い":
-		b.SendSpseTemplate(replyToken)
+		err := b.ReplyTemplate(replyToken, b.TemplateHandler("検索方法"), ctx)
+		if err != nil {
+			log.Infof(ctx, "could not send the template あ:", err)
+		}
 	}
 	b.FirstPageTemplate(replyToken)
 }
 
-func (b *mybot) SendSilsTemplate(message string) *linebot.ButtonsTemplate {
+func (b *mybot) TemplateHandler(message string) *linebot.ButtonsTemplate {
 	return linebot.NewButtonsTemplate(
 		"", message, "曜日検索",
 		linebot.NewPostbackTemplateAction("曜日で検索", "period:", "", ""),

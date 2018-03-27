@@ -73,7 +73,7 @@ func periodTemplates() []*linebot.CarouselColumn {
 	return templates
 }
 
-func (b *mybot) searchTemplate(message, replyToken string, ctx context.Context) {
+func (b *mybot) serveTemplate(message, replyToken string, ctx context.Context) {
 	d := strings.Split(message, ":")
 	e := strings.Split(d[1], "&")
 	log.Infof(ctx, "======================")
@@ -81,7 +81,6 @@ func (b *mybot) searchTemplate(message, replyToken string, ctx context.Context) 
 	switch d[0] {
 	case "period":
 		fmt.Println(b.SendCarouselTemplate(ctx, replyToken, "period", periodTemplates()...))
-
 	case "week":
 		fmt.Println(b.SendCarouselTemplate(ctx, replyToken, "week", timeTemplates(d[1:])...))
 	case "schedule":
