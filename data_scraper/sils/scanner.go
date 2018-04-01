@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	filePath = "../sils/syllabus_url.txt"
+	filePath = "./syllabus_url.txt"
 )
 
 func FromFile(filePath string) []string {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 	"golang.org/x/net/context"
@@ -28,31 +29,29 @@ func (b *mybot) EventRouter(eve []*linebot.Event, ctx context.Context) {
 
 func (b *mybot) handleText(message *linebot.TextMessage, replyToken string, ctx context.Context) {
 	switch message.Text {
-	case "あ":
-		err := b.ReplyTemplate(replyToken, b.TemplateHandler("検索方法"), ctx)
+	case "学部選択":
+		err := b.SendCarouselTemplate(ctx, replyToken, "学部選択", facultyTemplates()...)
 		if err != nil {
-			log.Infof(ctx, "could not send the template あ:", err)
-		}
-	case "い":
-		err := b.ReplyTemplate(replyToken, b.TemplateHandler("検索方法"), ctx)
-		if err != nil {
-			log.Infof(ctx, "could not send the template あ:", err)
+			log.Errorf(ctx, "could not send the template 学部選択:", err)
 		}
 	}
-	b.FirstPageTemplate(replyToken)
 }
 
-func (b *mybot) TemplateHandler(message string) *linebot.ButtonsTemplate {
-	return linebot.NewButtonsTemplate(
-		"", message, "曜日検索",
-		linebot.NewPostbackTemplateAction("曜日で検索", "period:", "", ""),
-		linebot.NewPostbackTemplateAction("レベルで検索", "level", "", ""),
-		linebot.NewPostbackTemplateAction("終わる", "j", "終わる", ""),
-	)
-}
-func (b *mybot) SendSpseTemplate(message string) *linebot.ButtonsTemplate {
-	return nil
-}
-func (b *mybot) FirstPageTemplate(message string) *linebot.ButtonsTemplate {
-	return nil
+func (b *mybot) serveTemplate(message, replyToken string, ctx context.Context) {
+	d := strings.Split(message, ":")
+	e := strings.Split(d[1], "&")
+	log.Infof(ctx, "len of d: %d\n len of e: %d\n", len(d), len(e))
+	switch d[0] {
+	case "search":
+		err := b.ReplyTemplate(replyToken, b.SearchTemplate(d[1]), ctx)
+		if err != nil {
+			log.Errorf(ctx, "could not send the template あ:", err)
+		}
+	case "period":
+		fmt.Println(b.SendCarouselTemplate(ctx, replyToken, "period", periodTemplates(d[1])...))
+	case "week":
+		fmt.Println(b.SendCarouselTemplate(ctx, replyToken, "week", timeTemplates(e)...))
+	case "schedule":
+		b.Kensaku(ctx, replyToken, e[0], e[1], e[2])
+	}
 }

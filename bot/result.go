@@ -9,11 +9,11 @@ import (
 	"google.golang.org/appengine/log"
 )
 
-func (b *mybot) Kensaku(ctx context.Context, replyToken, day, times string) {
+func (b *mybot) Kensaku(ctx context.Context, replyToken, faculty, day, times string) {
 	var datas []*sils.Class
-	log.Infof(ctx, "%s", times)
+	log.Infof(ctx, "%s", faculty)
 
-	q := datastore.NewQuery("SILS").Filter("day =", day).Filter("period =", times)
+	q := datastore.NewQuery(faculty).Filter("day =", day).Filter("period =", times)
 	num, err := q.Count(ctx)
 	if err != nil {
 		return
@@ -40,33 +40,49 @@ func (b *mybot) Kensaku(ctx context.Context, replyToken, day, times string) {
 	}
 
 	log.Infof(ctx, "%d", len(datas))
-	b.SendCarouselTemplate(ctx, replyToken, "結果", ResultTemplate(datas)...)
+	b.SendCarouselTemplates(ctx, replyToken, "結果", Wrapper(ctx, datas))
 }
 
-func ResultTemplate(datas []*sils.Class) []*linebot.CarouselColumn {
-	x := len(datas)
-	switch {
-	case x < 10:
-		templates := make([]*linebot.CarouselColumn, x)
-		for i, data := range datas {
-			url := linebot.NewURITemplateAction(data.CourseTitle[:17]+"...", data.URL)
-			templates[i] = linebot.NewCarouselColumn(
-				"", data.Day+data.Period, data.Instructor,
-				url,
-			)
-			return templates
-		}
-	case x >= 10:
-		templates := make([]*linebot.CarouselColumn, len(datas[:10]))
-		for i, data := range datas[:10] {
-			url := linebot.NewURITemplateAction(data.CourseTitle[:17]+"...", data.URL)
-			templates[i] = linebot.NewCarouselColumn(
-				"", data.Day+data.Period+"\t"+data.Category, data.Instructor,
-				url,
-			)
-		}
-		return templates
+func Wrapper(ctx context.Context, datas []*sils.Class) [][]*linebot.CarouselColumn {
+	var t [][]*linebot.CarouselColumn
+	n := len(datas) / 10
+	if len(datas)%10 > 0 {
+		n++
 	}
 
-	return nil
+	ln := 10
+	for i := 0; i < n; i++ {
+		if len(datas)-i*10 < 10 {
+			ln = len(datas)
+		}
+
+		t = append(t, ResultTemplate(ctx, datas[i*10:ln]))
+		ln += 10
+	}
+
+	return t
+}
+
+func ResultTemplate(ctx context.Context, datas []*sils.Class) []*linebot.CarouselColumn {
+	x := len(datas)
+	templates := make([]*linebot.CarouselColumn, x)
+	log.Infof(ctx, "--%d--", x)
+	for i, data := range datas[:x] {
+		log.Infof(ctx, "====================== %d", i)
+		url := linebot.NewURITemplateAction(FixLength(data.CourseTitle)+"...", data.URL)
+		templates[i] = linebot.NewCarouselColumn(
+			"", data.Day+data.Period, data.Instructor,
+			url,
+		)
+	}
+
+	return templates
+}
+
+func FixLength(title string) string {
+	t := title
+	for i := len(t); i < 17; i++ {
+		t += "."
+	}
+	return t[:17]
 }

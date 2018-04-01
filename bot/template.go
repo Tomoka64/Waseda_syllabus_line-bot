@@ -6,15 +6,60 @@ import (
 
 	"github.com/line/line-bot-sdk-go/linebot"
 	"golang.org/x/net/context"
-	"google.golang.org/appengine/log"
 )
 
-func (r *mybot) SendCarouselTemplate(ctx context.Context, replyToken, altText string,
-	columns ...*linebot.CarouselColumn) error {
+func templatesMaker(ctx context.Context, colomuns [][]*linebot.CarouselColumn) []linebot.Template {
+	r := []linebot.Template{}
+	for _, v := range colomuns {
+		r = append(r, linebot.NewCarouselTemplate(v...))
+	}
 
-	return r.Reply(ctx, replyToken,
-		linebot.NewTemplateMessage(altText,
-			linebot.NewCarouselTemplate(columns...)))
+	return r
+}
+func (b *mybot) NewTemplateMessages(altText string, templates []linebot.Template) []linebot.Message {
+	var t []linebot.Message
+	for _, template := range templates {
+		a := linebot.NewTemplateMessage(altText, template)
+		t = append(t, a)
+	}
+	return t
+}
+
+func (b *mybot) SearchTemplate(message string) *linebot.ButtonsTemplate {
+	return linebot.NewButtonsTemplate(
+		"", message, "検索",
+		linebot.NewPostbackTemplateAction("曜日で検索", "period:"+message, "", ""),
+		linebot.NewPostbackTemplateAction("レベルで検索", "level:", "", ""),
+		linebot.NewPostbackTemplateAction("終わる", "j", "終わる", ""),
+	)
+}
+
+func facultyTemplates() []*linebot.CarouselColumn {
+	faculties := [][]string{
+		{"国際教養学部/SILS", "政治経済学部/PSE"},
+		{"文化構想学部/CMS", "教育学部/EDU"},
+		{"基幹理工学部/FSE", "先進理工学部/ASE"},
+		{"人間科学部/HUM", "法学部/LAW"},
+		{"文学部/HSS", "商学部/SOC"},
+		{"創造理工学部/CSE", "社会科学部/SSS"},
+		{"スポーツ科学部/SPS", "やめる/end"},
+	}
+
+	templates := make([]*linebot.CarouselColumn, len(faculties))
+	for i, faculty := range faculties {
+		ret1 := strings.Split(faculty[0], "/")
+		ret2 := strings.Split(faculty[1], "/")
+		action1 := fmt.Sprintf("search:%s", ret1[1])
+		action2 := fmt.Sprintf("search:%s", ret2[1])
+		postback1 := linebot.NewPostbackTemplateAction(faculty[0], action1, "", "")
+		postback2 := linebot.NewPostbackTemplateAction(faculty[1], action2, "", "")
+		templates[i] = linebot.NewCarouselColumn(
+			"", "学部を選んでください", "pick your faculty",
+			postback1,
+			postback2,
+		)
+	}
+	return templates
 }
 
 func timeTemplates(datas []string) []*linebot.CarouselColumn {
@@ -31,7 +76,7 @@ func timeTemplates(datas []string) []*linebot.CarouselColumn {
 	templates := make([]*linebot.CarouselColumn, len(schedule))
 
 	for i, time := range schedule {
-		action := fmt.Sprintf("schedule:%s&%s", datas[0], time)
+		action := fmt.Sprintf("schedule:%s&%s&%s", datas[0], datas[1], time)
 		postback := linebot.NewPostbackTemplateAction(time, action, "", "")
 		templates[i] = linebot.NewCarouselColumn(
 			"", "何限か", "選んでください",
@@ -42,7 +87,7 @@ func timeTemplates(datas []string) []*linebot.CarouselColumn {
 	return templates
 }
 
-func periodTemplates() []*linebot.CarouselColumn {
+func periodTemplates(message string) []*linebot.CarouselColumn {
 	days := []string{
 		"月曜日",
 		"火曜日",
@@ -55,14 +100,14 @@ func periodTemplates() []*linebot.CarouselColumn {
 
 	dayOfweek := map[string]string{
 		"月曜日": "Mon", "火曜日": "Tues", "水曜日": "Wed",
-		"木曜日": "Thu", "金曜日": "Fri", "土曜日": "Sat",
+		"木曜日": "Thur", "金曜日": "Fri", "土曜日": "Sat",
 		"やめる": "end",
 	}
 
 	templates := make([]*linebot.CarouselColumn, len(dayOfweek))
 
 	for i, day := range days {
-		action := fmt.Sprintf("week:%s", dayOfweek[day])
+		action := fmt.Sprintf("week:%s&%s", message, dayOfweek[day])
 		postback := linebot.NewPostbackTemplateAction(day, action, "", "")
 		templates[i] = linebot.NewCarouselColumn(
 			"", "曜日選択", "選んでください",
@@ -71,19 +116,4 @@ func periodTemplates() []*linebot.CarouselColumn {
 	}
 
 	return templates
-}
-
-func (b *mybot) serveTemplate(message, replyToken string, ctx context.Context) {
-	d := strings.Split(message, ":")
-	e := strings.Split(d[1], "&")
-	log.Infof(ctx, "======================")
-	log.Infof(ctx, "len of d: %d\n len of e: %d\n", len(d), len(e))
-	switch d[0] {
-	case "period":
-		fmt.Println(b.SendCarouselTemplate(ctx, replyToken, "period", periodTemplates()...))
-	case "week":
-		fmt.Println(b.SendCarouselTemplate(ctx, replyToken, "week", timeTemplates(d[1:])...))
-	case "schedule":
-		b.Kensaku(ctx, replyToken, e[0], e[1])
-	}
 }
